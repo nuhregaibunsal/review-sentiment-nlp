@@ -2,9 +2,13 @@ import string
 from pathlib import Path
 
 import pandas as pd
+from textblob import TextBlob
 
 
 CSV_PATH = Path("reviews.csv")
+
+POSITIVE_THRESHOLD = 0.1
+NEGATIVE_THRESHOLD = -0.1
 
 STOP_WORDS = {
     "a", "an", "the", "and", "or", "but", "if", "while", "is", "are", "was",
@@ -53,10 +57,28 @@ def clean_text(raw_text: str) -> str:
     return " ".join(meaningful_words)
 
 
+def calculate_sentiment_score(text: str) -> float:
+    return TextBlob(text).sentiment.polarity
+
+
+def label_sentiment(score: float) -> str:
+    if score > POSITIVE_THRESHOLD:
+        return "Positive"
+    if score < NEGATIVE_THRESHOLD:
+        return "Negative"
+    return "Neutral"
+
+
 def main() -> None:
     reviews_df = load_reviews(CSV_PATH)
     reviews_df["cleaned_review"] = reviews_df["review"].apply(clean_text)
-    print(reviews_df[["review", "cleaned_review"]].head())
+    reviews_df["sentiment_score"] = reviews_df["review"].apply(
+        calculate_sentiment_score
+    )
+    reviews_df["sentiment_label"] = reviews_df["sentiment_score"].apply(
+        label_sentiment
+    )
+    print(reviews_df[["review", "sentiment_score", "sentiment_label"]].head())
 
 
 if __name__ == "__main__":
