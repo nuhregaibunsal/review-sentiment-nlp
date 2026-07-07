@@ -69,8 +69,7 @@ def label_sentiment(score: float) -> str:
     return "Neutral"
 
 
-def main() -> None:
-    reviews_df = load_reviews(CSV_PATH)
+def run_pipeline(reviews_df: pd.DataFrame) -> pd.DataFrame:
     reviews_df["cleaned_review"] = reviews_df["review"].apply(clean_text)
     reviews_df["sentiment_score"] = reviews_df["review"].apply(
         calculate_sentiment_score
@@ -78,7 +77,25 @@ def main() -> None:
     reviews_df["sentiment_label"] = reviews_df["sentiment_score"].apply(
         label_sentiment
     )
-    print(reviews_df[["review", "sentiment_score", "sentiment_label"]].head())
+    return reviews_df
+
+
+def print_distribution(reviews_df: pd.DataFrame) -> None:
+    distribution = reviews_df["sentiment_label"].value_counts()
+
+    print("\nSentiment distribution")
+    print("-" * 30)
+    for label in ("Positive", "Negative", "Neutral"):
+        count = int(distribution.get(label, 0))
+        print(f"{label:<10}: {count}")
+    print("-" * 30)
+    print(f"{'Total':<10}: {len(reviews_df)}")
+
+
+def main() -> None:
+    reviews_df = load_reviews(CSV_PATH)
+    reviews_df = run_pipeline(reviews_df)
+    print_distribution(reviews_df)
 
 
 if __name__ == "__main__":
