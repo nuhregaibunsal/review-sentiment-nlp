@@ -1,9 +1,17 @@
+import string
 from pathlib import Path
 
 import pandas as pd
 
 
 CSV_PATH = Path("reviews.csv")
+
+STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "while", "is", "are", "was",
+    "were", "be", "been", "being", "to", "of", "in", "on", "at", "for", "with",
+    "this", "that", "these", "those", "it", "its", "as", "by", "from", "i",
+    "you", "he", "she", "we", "they", "my", "your", "our", "their", "me",
+}
 
 
 def build_mock_reviews() -> pd.DataFrame:
@@ -34,9 +42,21 @@ def load_reviews(csv_path: Path) -> pd.DataFrame:
     return reviews_df
 
 
+def clean_text(raw_text: str) -> str:
+    lowercased = raw_text.lower()
+    no_punctuation = lowercased.translate(
+        str.maketrans("", "", string.punctuation)
+    )
+    meaningful_words = [
+        word for word in no_punctuation.split() if word not in STOP_WORDS
+    ]
+    return " ".join(meaningful_words)
+
+
 def main() -> None:
     reviews_df = load_reviews(CSV_PATH)
-    print(reviews_df.head())
+    reviews_df["cleaned_review"] = reviews_df["review"].apply(clean_text)
+    print(reviews_df[["review", "cleaned_review"]].head())
 
 
 if __name__ == "__main__":
